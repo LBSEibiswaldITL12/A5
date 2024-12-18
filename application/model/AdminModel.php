@@ -12,7 +12,7 @@ class AdminModel
      * @param $softDelete
      * @param $userId
      */
-    public static function setAccountSuspensionAndDeletionStatus($suspensionInDays, $softDelete, $userId)
+    public static function setAccountSuspensionAndDeletionStatus($email, $suspensionInDays, $softDelete, $userId)
     {
 
         // Prevent to suspend or delete own account.
@@ -35,8 +35,12 @@ class AdminModel
             $delete = 0;
         }
 
+        if (!self::emailVerifcation($email)) {
+            return false;
+        }
+
         // write the above info to the database
-        self::writeDeleteAndSuspensionInfoToDatabase($userId, $suspensionTime, $delete);
+        self::writeDeleteAndSuspensionInfoToDatabase($email, $userId, $suspensionTime, $delete);
 
         // if suspension or deletion should happen, then also kick user out of the application instantly by resetting
         // the user's session :)
@@ -53,12 +57,13 @@ class AdminModel
      * @param $delete
      * @return bool
      */
-    private static function writeDeleteAndSuspensionInfoToDatabase($userId, $suspensionTime, $delete)
+    private static function writeDeleteAndSuspensionInfoToDatabase($email, $userId, $suspensionTime, $delete)
     {
         $database = DatabaseFactory::getFactory()->getConnection();
 
-        $query = $database->prepare("UPDATE users SET user_suspension_timestamp = :user_suspension_timestamp, user_deleted = :user_deleted  WHERE user_id = :user_id LIMIT 1");
+        $query = $database->prepare("UPDATE users SET user_email = :user_email, user_suspension_timestamp = :user_suspension_timestamp, user_deleted = :user_deleted  WHERE user_id = :user_id LIMIT 1");
         $query->execute(array(
+                ':user_email' => $email,
                 ':user_suspension_timestamp' => $suspensionTime,
                 ':user_deleted' => $delete,
                 ':user_id' => $userId
@@ -91,5 +96,23 @@ class AdminModel
             Session::add('feedback_positive', Text::get('FEEDBACK_ACCOUNT_USER_SUCCESSFULLY_KICKED'));
             return true;
         }
+    }
+
+    private static function emailVerifcation($email): bool
+    {
+        if (empty($email)) {
+            Session::add('feedback_negative', Text::get('FEEDBACK_EMAIL_FIELD_EMPTY'));
+            return false;
+        }
+
+        // validate the email with PHP's internal filter
+        // side-fact: Max length seems to be 254 chars
+        // @see http://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Session::add('feedback_negative', Text::get('FEEDBACK_EMAIL_DOES_NOT_FIT_PATTERN'));
+            return false;
+        }
+
+        return true;
     }
 }

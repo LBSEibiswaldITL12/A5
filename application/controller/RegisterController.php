@@ -13,6 +13,7 @@ class RegisterController extends Controller
      */
     public function __construct()
     {
+        Auth::checkAdminAuthentication();
         parent::__construct();
     }
 
@@ -22,11 +23,7 @@ class RegisterController extends Controller
      */
     public function index()
     {
-        if (LoginModel::isUserLoggedIn()) {
-            Redirect::home();
-        } else {
-            $this->View->render('register/index');
-        }
+        $this->View->render('register/index');
     }
 
     /**
@@ -35,28 +32,9 @@ class RegisterController extends Controller
      */
     public function register_action()
     {
-        $registration_successful = RegistrationModel::registerNewUser();
+        RegistrationModel::registerNewUser();
 
-        if ($registration_successful) {
-            Redirect::to('login/index');
-        } else {
-            Redirect::to('register/index');
-        }
-    }
-
-    /**
-     * Verify user after activation mail link opened
-     * @param int $user_id user's id
-     * @param string $user_activation_verification_code user's verification token
-     */
-    public function verify($user_id, $user_activation_verification_code)
-    {
-        if (isset($user_id) && isset($user_activation_verification_code)) {
-            RegistrationModel::verifyNewUser($user_id, $user_activation_verification_code);
-            $this->View->render('register/verify');
-        } else {
-            Redirect::to('login/index');
-        }
+        Redirect::to('register/index');
     }
 
     /**
