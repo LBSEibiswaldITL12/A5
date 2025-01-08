@@ -13,9 +13,6 @@
     <!-- wrapper, to center website -->
     <div class="wrapper">
 
-        <!-- logo -->
-        <div class="logo"></div>
-
         <!-- navigation -->
         <ul class="navigation">
             <li <?php if (View::checkForActiveController($filename, "index")) { echo ' class="active" '; } ?> >
@@ -30,6 +27,9 @@
                 </li>
                 <li <?php if (View::checkForActiveController($filename, "note")) { echo ' class="active" '; } ?> >
                     <a href="<?php echo Config::get('URL'); ?>note/index">My Notes</a>
+                </li>
+                <li <?php if (View::checkForActiveController($filename, "message")) { echo ' class="active" '; } ?> >
+                    <a href="<?php echo Config::get('URL'); ?>message/index">Chats</a>
                 </li>
             <?php } else { ?>
                 <!-- for not logged in users -->
