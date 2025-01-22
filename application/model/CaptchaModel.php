@@ -1,5 +1,7 @@
 <?php
 
+use GuzzleHttp\Client;
+
 /**
  * Class CaptchaModel
  *
@@ -9,38 +11,36 @@
  */
 class CaptchaModel
 {
-    /**
-     * Generates the captcha, "returns" a real image, this is why there is header('Content-type: image/jpeg')
-     * Note: This is a very special method, as this is echoes out binary data.
-     */
-    public static function generateAndShowCaptcha()
+    protected $httpClient;
+    protected $secretKey;
+
+    public function __construct(Client $httpClient, string $secretKey)
     {
-        // create a captcha with the CaptchaBuilder lib (loaded via Composer)
-        $captcha = new Gregwar\Captcha\CaptchaBuilder;
-        $captcha->build(
-            Config::get('CAPTCHA_WIDTH'),
-            Config::get('CAPTCHA_HEIGHT')
-        );
-
-        // write the captcha character into session
-        Session::set('captcha', $captcha->getPhrase());
-
-        // render an image showing the characters (=the captcha)
-        header('Content-type: image/jpeg');
-        $captcha->output();
+        $this->httpClient = $httpClient;
+        $this->secretKey = $secretKey;
     }
 
     /**
-     * Checks if the entered captcha is the same like the one from the rendered image which has been saved in session
-     * @param $captcha string The captcha characters
-     * @return bool success of captcha check
+     * Validates the reCAPTCHA token sent from the client-side.
+     *
+     * @param string $token The reCAPTCHA response token from the frontend.
+     * @param string $userIp The user's IP address (optional but recommended for security).
+     * @return bool True if the token is valid, false otherwise.
      */
-    public static function checkCaptcha($captcha)
+    public function validateRecaptcha(string $token, string $userIp = null): bool
     {
-        if (Session::get('captcha') && ($captcha == Session::get('captcha'))) {
-            return true;
-        }
+        $url = 'https://www.google.com/recaptcha/api/siteverify';
 
-        return false;
+        $response = $this->httpClient->post($url, [
+            'form_params' => [
+                'secret' => $this->secretKey,
+                'response' => $token,
+                'remoteip' => "localhost",
+            ],
+        ]);
+
+        $responseBody = json_decode((string) $response->getBody(), true);
+
+        return isset($responseBody['success']) && $responseBody['success'] === true;
     }
 }

@@ -38,13 +38,13 @@ return array(
      * Configuration for: Folders
      * Usually there's no reason to change this.
      */
-    'PATH_CONTROLLER' => realpath(dirname(__FILE__).'/../../') . '/application/controller/',
-    'PATH_VIEW' => realpath(dirname(__FILE__).'/../../') . '/application/view/',
+    'PATH_CONTROLLER' => realpath(dirname(__FILE__) . '/../../') . '/application/controller/',
+    'PATH_VIEW' => realpath(dirname(__FILE__) . '/../../') . '/application/view/',
     /**
      * Configuration for: Avatar paths
      * Internal path to save avatars. Make sure this folder is writable. The slash at the end is VERY important!
      */
-    'PATH_AVATARS' => realpath(dirname(__FILE__).'/../../') . '/public/avatars/',
+    'PATH_AVATARS' => realpath(dirname(__FILE__) . '/../../') . '/public/avatars/',
     'PATH_AVATARS_PUBLIC' => 'avatars/',
     /**
      * Configuration for: Default controller and action
@@ -75,6 +75,8 @@ return array(
      */
     'CAPTCHA_WIDTH' => 359,
     'CAPTCHA_HEIGHT' => 100,
+    'RECAPTCHA_SITE_KEY' => '6Le9MbgqAAAAAMge1ikA33UyGlT4B-9JYQRjzVJG',
+    'RECAPTCHA_SECRET_KEY' => '6Le9MbgqAAAAAKHc9kgU6dBawWVAEJbhltEQ9sM4',
     /**
      * Configuration for: Cookies
      * 1209600 seconds = 2 weeks

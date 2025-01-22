@@ -6,11 +6,7 @@ class MessageModel
     {
         $database = DatabaseFactory::getFactory()->getConnection();
 
-        $sql = "SELECT *
-            FROM messages
-            INNER JOIN users ON messages.senderId=users.user_id;
-            WHERE chatId = :chat_id
-            ORDER BY createTime ASC";
+        $sql = "CALL getMessagesByChatId(:chat_id)";
         $query = $database->prepare($sql);
         $query->execute(array(':chat_id' => $id));
 
@@ -21,10 +17,7 @@ class MessageModel
     {
         $database = DatabaseFactory::getFactory()->getConnection();
 
-        $sql = "SELECT u.id, u.userId, u.chatId, c.name
-            FROM userToMsgChat as u
-            INNER JOIN chat as c ON  u.chatId = c.id
-            WHERE userId = :user_id";
+        $sql = "CALL getAllChatsByUserId(:user_id)";
         $query = $database->prepare($sql);
         $query->execute(array(':user_id' => Session::get('user_id')));
 
@@ -35,10 +28,7 @@ class MessageModel
     {
         $database = DatabaseFactory::getFactory()->getConnection();
 
-        $sql = "SELECT c.id, c.userId, u.user_name 
-            FROM userToMsgChat as c
-            INNER JOIN users as u ON  c.userId = u.user_id
-            WHERE chatId = :chat_id";
+        $sql = "CALL getChatByChatId(:chat_id)";
         $query = $database->prepare($sql);
         $query->execute(array(':chat_id' => $chatId));
 

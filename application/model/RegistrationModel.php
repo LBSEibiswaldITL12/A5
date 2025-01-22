@@ -1,5 +1,7 @@
 <?php
 
+use GuzzleHttp\Client;
+
 /**
  * Class RegistrationModel
  *
@@ -15,12 +17,40 @@ class RegistrationModel
      */
     public static function registerNewUser()
     {
+        var_dump("Test");
+        $httpClient = new Client();
+        $recaptchaSecretKey = Config::get('RECAPTCHA_SECRET_KEY');
+
         // clean the input
         $user_name = strip_tags(Request::post('user_name'));
         $user_email = strip_tags(Request::post('user_email'));
         $user_email_repeat = strip_tags(Request::post('user_email_repeat'));
         $user_password_new = Request::post('user_password_new');
         $user_password_repeat = Request::post('user_password_repeat');
+
+        var_dump("You are here");
+
+        $recaptchaResponse = Request::post('g-recaptcha-response') ?? '';
+
+        if ($recaptchaResponse) {
+            $response = $httpClient->post('https://www.google.com/recaptcha/api/siteverify', [
+                'form_params' => [
+                    'secret' => $recaptchaSecretKey,
+                    'response' => $recaptchaResponse,
+                    'remoteip' => $_SERVER['REMOTE_ADDR'],
+                ],
+            ]);
+
+            $result = json_decode((string) $response->getBody(), true);
+
+            if ($result['success'] === true) {
+                $return = true;
+            } else {
+                $return = false;
+            }
+        } else {
+            $return = false;
+        }
 
         // stop registration flow if registrationInputValidation() returns false (= anything breaks the input check rules)
         $validation_result = self::registrationInputValidation($user_name, $user_password_new, $user_password_repeat, $user_email, $user_email_repeat);
@@ -87,7 +117,7 @@ class RegistrationModel
         $return = true;
 
         // if username, email and password are all correctly validated, but make sure they all run on first sumbit
-        if (self::validateUserName($user_name) AND self::validateUserEmail($user_email, $user_email_repeat) AND self::validateUserPassword($user_password_new, $user_password_repeat) AND $return) {
+        if (self::validateUserName($user_name) and self::validateUserEmail($user_email, $user_email_repeat) and self::validateUserPassword($user_password_new, $user_password_repeat) and $return) {
             return true;
         }
 
@@ -156,7 +186,7 @@ class RegistrationModel
      */
     public static function validateUserPassword($user_password_new, $user_password_repeat)
     {
-        if (empty($user_password_new) OR empty($user_password_repeat)) {
+        if (empty($user_password_new) or empty($user_password_repeat)) {
             Session::add('feedback_negative', Text::get('FEEDBACK_PASSWORD_FIELD_EMPTY'));
             return false;
         }
@@ -193,13 +223,15 @@ class RegistrationModel
         $sql = "INSERT INTO users (user_name, user_password_hash, user_email, user_creation_timestamp, user_activation_hash, user_provider_type, user_active)
                     VALUES (:user_name, :user_password_hash, :user_email, :user_creation_timestamp, :user_activation_hash, :user_provider_type, :user_active)";
         $query = $database->prepare($sql);
-        $query->execute(array(':user_name' => $user_name,
-                              ':user_password_hash' => $user_password_hash,
-                              ':user_email' => $user_email,
-                              ':user_creation_timestamp' => $user_creation_timestamp,
-                              ':user_activation_hash' => $user_activation_hash,
-                              ':user_provider_type' => 'DEFAULT',
-                              ':user_active' => 1));
+        $query->execute(array(
+            ':user_name' => $user_name,
+            ':user_password_hash' => $user_password_hash,
+            ':user_email' => $user_email,
+            ':user_creation_timestamp' => $user_creation_timestamp,
+            ':user_activation_hash' => $user_activation_hash,
+            ':user_provider_type' => 'DEFAULT',
+            ':user_active' => 1
+        ));
         $count =  $query->rowCount();
         if ($count == 1) {
             return true;
